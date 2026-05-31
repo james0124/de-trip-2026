@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>德國行程 · 鄭和下西洋棋 🇩🇪</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --line:#2a3140;
+    --txt:#e6edf3; --sub:#9aa7b4; --accent:#58a6ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+       font-family:-apple-system,"PingFang TC","Noto Sans TC",Segoe UI,sans-serif;
+       line-height:1.6}
+  header{padding:20px 18px 8px;text-align:center}
+  header h1{margin:0;font-size:22px;letter-spacing:.5px}
+  header .sub{color:var(--sub);font-size:13px;margin-top:4px}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 14px}
+  .topbar{position:sticky;top:0;z-index:600;background:var(--bg);
+       padding:8px 0 6px;box-shadow:0 6px 18px rgba(0,0,0,.55)}
+  #map{height:55vh;min-height:320px;border-radius:14px;border:1px solid var(--line);
+       box-shadow:0 6px 24px rgba(0,0,0,.4)}
+  .legend{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:10px 0 2px}
+  .legend button{background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+       padding:6px 12px;border-radius:20px;font-size:13px;cursor:pointer;
+       display:flex;align-items:center;gap:6px;transition:.15s}
+  .legend button:hover{border-color:var(--accent)}
+  .dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+  .days{display:grid;gap:14px;margin-top:14px}
+  .day{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+       overflow:hidden;scroll-margin-top:calc(55vh + 64px)}
+  .day h2{margin:0;padding:12px 16px;font-size:16px;display:flex;align-items:center;gap:10px;
+       border-left:5px solid var(--c)}
+  .day h2 .tag{margin-left:auto;font-size:11px;color:var(--sub);font-weight:400}
+  .day .body{padding:4px 16px 14px}
+  .step{display:flex;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line);align-items:baseline}
+  .step:last-child{border-bottom:none}
+  .step .pt{font-weight:600;min-width:0;flex:1}
+  .step .stay{white-space:nowrap;font-size:11.5px;color:#7ee0b8;background:#13241d;
+       border:1px solid #1f4736;border-radius:10px;padding:1px 8px;align-self:center}
+  .step.clickable{cursor:pointer;border-radius:7px;margin:0 -8px;padding-left:8px;padding-right:8px;transition:background .12s}
+  .step.clickable:hover,.step.clickable:active{background:var(--panel2)}
+  .step.clickable:hover .pt{color:var(--accent)}
+  .step.dine{background:#10241a;border:1px solid #1f6e45;border-radius:8px;
+       margin:4px -8px;padding-left:8px;padding-right:8px}
+  .step.dine .pt{color:#6ee7a8}
+  .dineblock{margin:10px -4px 2px;background:#0e1a14;border:1px solid #1f6e45;border-radius:10px;padding:8px 10px}
+  .dineblock .dh{font-size:12.5px;color:#6ee7a8;margin-bottom:4px}
+  .dopt{cursor:pointer;padding:6px 8px;border-radius:7px}
+  .dopt:hover{background:#13241d}
+  .dopt b{color:#aef5cf;font-size:13.5px}
+  .dopt .dn{display:block;color:var(--sub);font-size:11.5px;margin-top:1px}
+  .step .t{color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap;font-size:13px;min-width:62px}
+  .move{color:var(--sub);font-size:12.5px;padding:3px 0 3px 72px;font-style:italic}
+  .move.route{cursor:pointer;border-radius:6px;margin:0 -8px;padding-left:80px;padding-right:8px}
+  .move.route:hover{background:var(--panel2);color:var(--txt)}
+  .move .go{font-style:normal;font-size:10.5px;color:var(--accent);
+       border:1px solid var(--line);border-radius:8px;padding:0 6px;margin-left:6px}
+  .flag{background:#2a1f12;border:1px solid #5c3b16;color:#ffcf8a;
+        border-radius:8px;padding:8px 12px;margin-top:10px;font-size:13px}
+  .flag.book{background:#12202a;border-color:#1d4a5c;color:#8fd4ff}
+  .flag.hard{background:#2a1218;border-color:#5c1d2b;color:#ff9aae}
+  .note{color:var(--sub);font-size:12.5px}
+  footer{color:var(--sub);text-align:center;font-size:12px;padding:18px}
+  .pill{font-size:11px;padding:1px 7px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);color:var(--sub)}
+  .info{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-top:18px}
+  .info h3{margin:14px 0 6px;font-size:15px;color:var(--accent)}
+  .info h3:first-child{margin-top:0}
+  .info ul,.info ol{margin:0;padding-left:20px}
+  .info li{font-size:13.5px;margin:3px 0}
+  .info code{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12.5px}
+  .info-note{color:var(--sub);font-size:12px;margin-top:10px;font-style:italic}
+</style>
+</head>
+<body>
+<header>
+  <h1>🇩🇪 德國行程 · 鄭和下西洋棋</h1>
+  <div class="sub">宇和 + 治雲 · 2026/06/07–06/13 · 柏林→漢堡（布萊梅/呂貝克/施威林 day trip）</div>
+</header>
+
+<div class="topbar">
+  <div class="wrap">
+    <div id="map"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="days" id="days"></div>
+</div>
+
+<div class="wrap">
+  <section class="info">
+    <h3>🎫 票券：建議買 Deutschland-Ticket</h3>
+    <ul>
+      <li><b>€63/人/月</b>，兩人 €126（六月一張全程通用）</li>
+      <li>✅ 含全德 <b>RE / RB / U-Bahn / S-Bahn / 公車 / 電車</b>：柏林+漢堡市區、6/11 布萊梅、<b>6/12 全段</b>、6/13 機場 S1</li>
+      <li>❌ 不含 <b>IC / ICE / EC 長途</b>：6/9 柏林→漢堡（已訂）；6/12 全是 RE 免費、不用搭 IC</li>
+      <li>⚠️ 訂閱制 → <b>6/10 前退訂</b>（買了馬上退，當月仍有效），或用「自動取消單月」的轉售 app</li>
+      <li>👉 兩人各買一張，估省 ~€150</li>
+    </ul>
+    <h3>📱 DB Navigator 查火車怎麼用</h3>
+    <ol>
+      <li>裝 <b>DB Navigator</b> app（藍底白字 DB，官方免費）</li>
+      <li>起點/終點打站名選總站，例：<code>Hamburg Hbf</code> → <code>Schwerin Hbf</code></li>
+      <li>設日期時間（出發 Abfahrt 或抵達 Ankunft）</li>
+      <li>開 <b>Deutschland-Ticket 篩選</b>（或取消勾 ICE/IC）→ 只剩月票免費的班次</li>
+      <li>看車種標籤：<b>RE/RB/S = 月票免費</b>；<b>IC/ICE = 另付</b>。點進去看轉乘站/月台</li>
+    </ol>
+    <div class="info-note">火車確切班次出發前再用 app 對一次（尤其早上漢堡→施威林、施威林→呂貝克要轉車那段）。</div>
+  </section>
+</div>
+
+<footer>
+  停留時間與交通為估算；火車確切班次出發前用 DB Navigator / Google Maps 再確認 ·
+  地圖 © OpenStreetMap / CARTO
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="routes.js"></script>
+<script>
+// ---- 行程資料 ----
+const DAYS = [
+  { id:"d8",  date:"6/8 (一) 柏林",   color:"#f2c94c", subtitle:"悠閒 · 戶外二戰歷史線（週一博物館關門，全程戶外）· 收在 Hofbräu",
+    steps:[
+      {pt:"Sheraton Esplanade 出發", t:"~09:30", coord:[52.5056,13.3548]},
+      {move:"U-Bahn 約 15min"},
+      {pt:"布蘭登堡門", stay:"20min", coord:[52.5163,13.3777]},
+      {move:"步行 5min"},
+      {pt:"國會大廈（圓頂需先預約）", stay:"30min", coord:[52.5187,13.3761]},
+      {move:"步行 8min"},
+      {pt:"歐洲猶太人紀念碑", stay:"20min", coord:[52.5139,13.3787]},
+      {move:"步行 12min"},
+      {pt:"Gendarmenmarkt · 午餐", t:"~12:30", stay:"60min", coord:[52.5136,13.3923]},
+      {move:"步行 10min"},
+      {pt:"Checkpoint Charlie", stay:"15min", coord:[52.5074,13.3904]},
+      {move:"步行 5min"},
+      {pt:"恐怖地形圖（Gestapo 遺址）", stay:"45min", coord:[52.5062,13.3842]},
+      {move:"U/S-Bahn 約 20min（3km+，別硬走）"},
+      {pt:"東邊畫廊（柏林圍牆）", stay:"40min", coord:[52.5045,13.4408]},
+      {move:"S-Bahn 約 15min 到 Alexanderplatz"},
+      {pt:"Hofbräu Berlin · 德式晚餐（已訂）", t:"18:30", stay:"90min", coord:[52.5246,13.4140]},
+      {move:"U-Bahn 約 20min（Alexanderplatz → 飯店）"},
+      {pt:"回 Sheraton Esplanade · 休息", t:"夜", coord:[52.5056,13.3548]},
+    ],
+    flags:[
+      {cls:"", txt:"⚠️ 8 個點偏「標準」不算「悠閒」；想更鬆就砍東邊畫廊或 Checkpoint Charlie 一個。"},
+      {cls:"book", txt:"📌 國會大廈玻璃圓頂：免費但要提前線上登記。"},
+    ]},
+
+  { id:"d9", date:"6/9 (二) 柏林→漢堡", color:"#f2994a", subtitle:"火車 12:30→15:12（已訂）· 漢堡第一晚自由",
+    steps:[
+      {pt:"柏林總站（12:00 前到）", t:"12:30", coord:[52.5250,13.3694]},
+      {move:"火車 約 2h42（已訂）"},
+      {pt:"漢堡總站 抵達", t:"15:12", coord:[53.5530,10.0068]},
+      {move:"步行 約 5min（Ibis 就在總站旁）"},
+      {pt:"check in · ibis Hamburg City（放行李）", stay:"~15min", coord:[53.5483,10.0094]},
+      {move:"步行 約 10min"},
+      {pt:"市政廳 + 內阿爾斯特湖", stay:"45min", coord:[53.5503,9.9926]},
+      {move:"湖畔散步"},
+      {pt:"晚餐 · Schifferbörse（總站對面，傳統海鮮，今晚不喝酒）", t:"晚上", stay:"90min", coord:[53.5538,10.0087], dine:true},
+      {move:"步行 約 3min（就在 ibis 旁）"},
+      {pt:"回 ibis Hamburg City · 休息", t:"夜", coord:[53.5483,10.0094]},
+    ],
+    flags:[{cls:"book", txt:"🍴 晚餐：和和選 Schifferbörse（總站對面、傳統北德海鮮，已查證 2026 營業）。就在 ibis 旁，吃完 3 分鐘到床——報告前一晚不喝酒、早睡剛好。要訂位打 +49 40 245240。"}]},
+
+  { id:"d10", date:"6/10 (三) 漢堡 · 報告日", color:"#eb5757", subtitle:"早上準備報告 → 13:37 報告 → 報完爆衝",
+    steps:[
+      {pt:"ibis Hamburg City · 準備報告", t:"上午", coord:[53.5483,10.0094]},
+      {move:"S-Bahn 到 Dammtor 站，下車即會場 約 15–20min"},
+      {pt:"CCH 會場 · 鄭鄭報告 💪", t:"13:37–13:44", coord:[53.5622,9.9852]},
+      {move:"午餐 + U-Bahn 約 15min 到倉庫城"},
+      {pt:"倉庫城 Speicherstadt（紅磚 UNESCO，超好拍）", stay:"30min", coord:[53.5440,9.9870]},
+      {move:"就在隔壁 步行 3min"},
+      {pt:"Miniatur Wunderland 模型世界", t:"15:30", stay:"2.5h", coord:[53.5438,9.9889]},
+      {move:"步行 10min"},
+      {pt:"易北愛樂廳 Plaza 觀景台", stay:"40min", coord:[53.5413,9.9842]},
+      {move:"步行 15min / U3 一站"},
+      {pt:"Landungsbrücken 看夕陽（日落約 21:50）", t:"傍晚", stay:"45min", coord:[53.5459,9.9713]},
+      {move:"U/S-Bahn 約 10min"},
+      {pt:"Reeperbahn 夜生活（報完慶祝小酌）", t:"晚上", coord:[53.5496,9.9575]},
+      {move:"U/S-Bahn 約 15min"},
+      {pt:"回 ibis Hamburg City · 休息", t:"夜", coord:[53.5483,10.0094]},
+    ],
+    flags:[
+      {cls:"book", txt:"📌 Miniatur Wunderland 15:30 時段票務必趁早線上訂，賣光會連動整個下午。"},
+      {cls:"book", txt:"📌 易北愛樂廳 Plaza：免費但需時段票（現場機器或線上）。"},
+      {cls:"hard", txt:"🌙 回程（週三平日，地鐵不通宵）：~00:30 前搭 S1/S3 Reeperbahn→總站約10min（ibis 就在總站旁）；更晚搭 600 系列 Nachtbus 或計程車(~€12–15, 10min)。"},
+    ]},
+
+  { id:"d11", date:"6/11 (四) 布萊梅", color:"#27ae60", subtitle:"童話城 day trip · 火車約 1h",
+    steps:[
+      {pt:"漢堡→布萊梅（IC 1h05 / RE 1h20）", t:"上午", coord:[53.5530,10.0068]},
+      {move:"布萊梅總站 → 市集廣場：步行 12min / 電車 5min"},
+      {pt:"市集廣場 · Rathaus + 羅蘭像（UNESCO）", stay:"30min", coord:[53.0759,8.8066]},
+      {move:"步行 2min"},
+      {pt:"不來梅樂隊銅像", stay:"10min", coord:[53.0762,8.8075]},
+      {move:"步行 3min"},
+      {pt:"Böttcherstraße", stay:"20min", coord:[53.0751,8.8058]},
+      {move:"步行 5min"},
+      {pt:"Schnoor 老城巷弄", stay:"40min", coord:[53.0728,8.8097]},
+      {move:"步行 5min"},
+      {pt:"聖彼得大教堂（St. Petri Dom）", stay:"25min", coord:[53.0755,8.8091]},
+      {move:"傍晚 IC/RE 約 1h 回漢堡"},
+      {pt:"漢堡總站", t:"傍晚", coord:[53.5530,10.0068]},
+      {move:"U-Bahn 約 10min"},
+      {pt:"回 JUFA HafenCity · 休息", t:"夜", coord:[53.5402,10.0094]},
+    ],
+    flags:[{cls:"book", txt:"💡 走 RE 可吃 Deutschland-Ticket；想快就買 IC（不含月票）。"}]},
+
+  { id:"d12", date:"6/12 (五) 施威林 + 呂貝克", color:"#56ccf2", subtitle:"晚起版 · 施威林上午(10:52到) → 呂貝克下午+晚上 · 回程僅 45min",
+    steps:[
+      {pt:"JUFA 出發", t:"08:50", coord:[53.5402,10.0094]},
+      {move:"U-Bahn 約 10min"},
+      {pt:"漢堡總站", t:"~09:10", coord:[53.5530,10.0068]},
+      {move:"🚆 直達 RE1 09:22→10:52（~1h30，約每小時一班，月票免費）"},
+      {pt:"施威林總站 抵達", t:"10:52", coord:[53.6354,11.4075]},
+      {move:"穿老城步行 ~20min（或公車 ~10min）"},
+      {pt:"施威林城堡（湖中童話城堡，內部博物館+花園）", t:"~11:15", stay:"2h", coord:[53.6245,11.4182]},
+      {move:"步行 ~12min"},
+      {pt:"施威林 Markt + 大教堂（順看拍照）", t:"~13:25", stay:"15min", coord:[53.6297,11.4144]},
+      {move:"步行 ~5min"},
+      {pt:"Zum Stadtkrug · 午餐（Mecklenburg 在地菜+自釀，walk-in 免訂）", t:"~13:45", stay:"60min", coord:[53.6297,11.4102], dine:true},
+      {move:"步行回總站 ~12min"},
+      {pt:"施威林總站", t:"~14:55", coord:[53.6354,11.4075]},
+      {move:"🚆 RE1+RE83 ~1h45（轉 1 次！非直達，每小時一班、月票免費）— 趕 15:06 那班"},
+      {pt:"呂貝克總站 抵達", t:"~16:52", coord:[53.8671,10.6705]},
+      {move:"步行 8min"},
+      {pt:"霍爾斯滕門 Holstentor", t:"~17:00", stay:"20min", coord:[53.8663,10.6797]},
+      {move:"步行 8min"},
+      {pt:"聖瑪麗教堂（18:00 關 → 先衝）", t:"~17:25", stay:"30min", coord:[53.8678,10.6851]},
+      {move:"步行 3min"},
+      {pt:"Niederegger 杏仁糖（19:00 關 → 第二順位，咖啡+蛋糕+樓上博物館）", t:"~18:00", stay:"40min", coord:[53.8666,10.6858]},
+      {move:"步行 ~5min"},
+      {pt:"St. Petri 塔 · 電梯眺七塔（到 20:00）", t:"~18:45", stay:"25min"},
+      {move:"步行 ~8min（往北 Burgtor 方向）"},
+      {pt:"Burgtor + Trave 河畔（快走）", t:"~19:15", stay:"15min", coord:[53.8739,10.6912]},
+      {move:"步行 ~3min"},
+      {pt:"晚餐 · Schiffergesellschaft（1535 船員公會，廚房 21:00 收，要訂位）", t:"~19:30", stay:"~80min", coord:[53.8712,10.6881], dine:true},
+      {move:"步行 ~12min → 總站"},
+      {pt:"呂貝克總站", t:"~21:02", coord:[53.8671,10.6705]},
+      {move:"🚆 RE8 21:09→21:53 直達 44min（傍晚最後順的直達；更晚要轉車 ~1h27）"},
+      {pt:"漢堡總站", t:"21:53", coord:[53.5530,10.0068]},
+      {move:"U-Bahn 約 10min"},
+      {pt:"回 JUFA HafenCity · 休息", t:"夜", coord:[53.5402,10.0094]},
+    ],
+    flags:[
+      {cls:"hard", txt:"🚆 早上漢堡→施威林：直達 RE1 09:22→10:52（~1h30、月票免費）。⚠️ 聚合網站誤報需轉車/IC，以 DB app 為準。"},
+      {cls:"hard", txt:"⏰ 城堡博物館 18:00 關（週五 10–18 有開，已查證）。~11:15 進、逛 2h 到 ~13:15 → 午餐很從容。"},
+      {cls:"hard", txt:"🚆 施威林→呂貝克 = RE1+RE83 ~1h45（轉 1 次，非直達！月票免費）。趕 15:06 → 呂貝克 ~16:52 到。"},
+      {cls:"hard", txt:"🚆 回程：21:09 RE8 直達 44min 是傍晚最後順的；晚餐 ~21:00 前結束趕這班，更晚要轉車(~1h27，末班 23:10)。"},
+      {cls:"book", txt:"🍽 訂位：Schiffergesellschaft（晚餐）週五晚一定要訂 → 0451 76776 或官網；Zum Stadtkrug（午餐）walk-in 免訂。"},
+      {cls:"", txt:"🕕 呂貝克關門順序：聖瑪麗 18:00 先衝 → Niederegger 19:00 → St. Petri 塔 20:00 → Burgtor/晚餐不限。"},
+      {cls:"book", txt:"💡 6/12 全段（漢堡→施威林→呂貝克→漢堡）都是 RE，月票全免費，不用買 IC。"},
+      {cls:"", txt:"⚠️ Buddenbrookhaus（湯瑪斯曼故居）整修中（到 ~2029），不用排。"},
+    ]},
+];
+
+// ---- 建地圖 ----
+const map = L.map('map',{scrollWheelZoom:true}).setView([53.2,10.5],7);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  attribution:'© OpenStreetMap, © CARTO', maxZoom:19
+}).addTo(map);
+
+const dayBounds = {};
+const markerById = {};
+let _mid = 0;
+DAYS.forEach(d=>{
+  const pts=[];
+  d.steps.forEach(s=>{
+    if(!s.coord) return;
+    s._mid = _mid++;
+    const m=L.circleMarker(s.coord, s.dine
+      ? {radius:9,color:'#1aa564',weight:3,fillColor:'#2ecc71',fillOpacity:1}
+      : {radius:7,color:'#0d1117',weight:2,fillColor:d.color,fillOpacity:1}).addTo(map);
+    m._base = s.dine ? {radius:9,weight:3,color:'#1aa564'} : {radius:7,weight:2,color:'#0d1117'};
+    m.bindPopup(`<b style="color:#111">${s.pt}</b>${s.t?` <span style="color:#555">${s.t}</span>`:''}${s.stay?` <span style="color:#0a7a4f">· 停留 ${s.stay}</span>`:''}<br><span style="color:#777">${d.date}</span>`);
+    markerById[s._mid]=m;
+    pts.push(s.coord);
+  });
+  if(pts.length) dayBounds[d.id]=L.latLngBounds(pts);
+});
+
+// 點下方景點 → 地圖飛過去並開 popup
+let _lastM=null;
+function focusPoint(id){
+  const m=markerById[id]; if(!m) return;
+  map.setView(m.getLatLng(), 15, {animate:true});
+  m.openPopup();
+  if(_lastM && _lastM._base) _lastM.setStyle(_lastM._base);
+  m.setStyle({radius:13,weight:3,color:'#ffffff'});
+  _lastM=m;
+}
+
+// 為每個交通段算出 起點_終點 的 route key（同日最近的前後座標點）
+DAYS.forEach(d=>{
+  d.steps.forEach((s,i)=>{
+    if(!s.move) return;
+    let from=null,to=null;
+    for(let j=i-1;j>=0;j--){ if(d.steps[j].coord!==undefined){from=d.steps[j]._mid;break;} }
+    for(let j=i+1;j<d.steps.length;j++){ if(d.steps[j].coord!==undefined){to=d.steps[j]._mid;break;} }
+    if(from!==null && to!==null){ s._rk=`${from}_${to}`; s._col=d.color; }
+  });
+});
+
+// 點交通段 → 沿實際道路畫線（可同時顯示多條；再點同一段收掉）
+const _routeLayers={};
+function _fitRoutes(){
+  const ls=Object.values(_routeLayers);
+  if(ls.length) map.fitBounds(L.featureGroup(ls).getBounds().pad(0.15));
+}
+function drawRoute(key,color){
+  const geo=(typeof ROUTES!=='undefined')&&ROUTES[key];
+  if(!geo) return;
+  if(_routeLayers[key]){ map.removeLayer(_routeLayers[key]); delete _routeLayers[key]; _fitRoutes(); return; }
+  _routeLayers[key]=L.polyline(geo,{color:color,weight:5,opacity:.9,
+    lineJoin:'round',lineCap:'round'}).addTo(map);
+  _fitRoutes();
+}
+function clearRoutes(){ for(const k in _routeLayers){ map.removeLayer(_routeLayers[k]); delete _routeLayers[k]; } }
+
+// ---- 圖例 / 聚焦按鈕 ----
+const legend=document.getElementById('legend');
+const allBtn=document.createElement('button');
+allBtn.innerHTML='🗺️ 全部';
+allBtn.onclick=()=>{ clearRoutes(); map.setView([53.2,10.5],7); };
+legend.appendChild(allBtn);
+DAYS.forEach(d=>{
+  const b=document.createElement('button');
+  b.innerHTML=`<span class="dot" style="background:${d.color}"></span>${d.date}`;
+  b.onclick=()=>{
+    if(dayBounds[d.id]) map.fitBounds(dayBounds[d.id].pad(0.3));
+    const card=document.getElementById('day-'+d.id);
+    if(card) card.scrollIntoView({behavior:'smooth',block:'start'});
+  };
+  legend.appendChild(b);
+});
+
+// ---- 逐日卡片 ----
+const days=document.getElementById('days');
+DAYS.forEach(d=>{
+  const el=document.createElement('div');
+  el.className='day'; el.id='day-'+d.id; el.style.setProperty('--c',d.color);
+  let html=`<h2 style="--c:${d.color}"><span class="dot" style="background:${d.color}"></span>${d.date}<span class="tag">${d.subtitle}</span></h2><div class="body">`;
+  d.steps.forEach(s=>{
+    if(s.move){
+      const r = s._rk && (typeof ROUTES!=='undefined') && ROUTES[s._rk];
+      html+=`<div class="move${r?' route':''}"${r?` onclick="drawRoute('${s._rk}','${s._col}')"`:''}>↳ ${s.move}${r?'<span class="go">▶ 路線</span>':''}</div>`;
+      return;
+    }
+    const ck = s.coord!==undefined;
+    html+=`<div class="step${ck?' clickable':''}${s.dine?' dine':''}"${ck?` onclick="focusPoint(${s._mid})"`:''}><span class="t">${s.t||''}</span><span class="pt">${s.dine?'🍴 ':(ck?'📍 ':'')}${s.pt}</span>${s.stay?`<span class="stay">⏱ ${s.stay}</span>`:''}</div>`;
+  });
+  (d.flags||[]).forEach(f=>{ if(f.txt) html+=`<div class="flag ${f.cls||''}">${f.txt}</div>`; });
+  html+=`</div>`;
+  el.innerHTML=html;
+  days.appendChild(el);
+});
+</script>
+</body>
+</html>
