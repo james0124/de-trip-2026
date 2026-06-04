@@ -123,7 +123,7 @@
 <script>
 // ---- 行程資料 ----
 const DAYS = [
-  { id:"d8",  date:"6/8 (一) 柏林",   color:"#f2c94c", subtitle:"悠閒 · 戶外二戰歷史線（週一博物館關門，全程戶外）· 收在 Hofbräu",
+  { id:"d8",  date:"6/8 (一) 柏林",   color:"#f2c94c", subtitle:"戶外二戰歷史線 + Mall of Berlin 逛街（週一館關、商店照開）· 收在 Hofbräu",
     steps:[
       {pt:"Sheraton Esplanade 出發", t:"~09:30", coord:[52.5056,13.3548]},
       {move:"U-Bahn 約 15min"},
@@ -132,12 +132,12 @@ const DAYS = [
       {pt:"國會大廈（圓頂需先預約）", stay:"30min", coord:[52.5187,13.3761]},
       {move:"步行 8min"},
       {pt:"歐洲猶太人紀念碑", stay:"20min", coord:[52.5139,13.3787]},
-      {move:"步行 12min"},
-      {pt:"Gendarmenmarkt · 午餐", t:"~12:30", stay:"60min", coord:[52.5136,13.3923]},
-      {move:"步行 10min"},
-      {pt:"Checkpoint Charlie", stay:"15min", coord:[52.5074,13.3904]},
+      {move:"步行 ~8min 往南"},
+      {pt:"🛍 Mall of Berlin · 逛街買東東 + 午餐(food court)", t:"~11:40", stay:"~2h", coord:[52.5106,13.3810]},
+      {move:"步行 ~7min"},
+      {pt:"恐怖地形圖（Gestapo 遺址）", t:"~14:00", stay:"45min", coord:[52.5062,13.3842]},
       {move:"步行 5min"},
-      {pt:"恐怖地形圖（Gestapo 遺址）", stay:"45min", coord:[52.5062,13.3842]},
+      {pt:"Checkpoint Charlie", stay:"15min", coord:[52.5074,13.3904]},
       {move:"U/S-Bahn 約 20min（3km+，別硬走）"},
       {pt:"東邊畫廊（柏林圍牆）", stay:"40min", coord:[52.5045,13.4408]},
       {move:"S-Bahn 約 15min 到 Alexanderplatz"},
@@ -146,8 +146,9 @@ const DAYS = [
       {pt:"回 Sheraton Esplanade · 休息", t:"夜", coord:[52.5056,13.3548]},
     ],
     flags:[
-      {cls:"", txt:"⚠️ 8 個點偏「標準」不算「悠閒」；想更鬆就砍東邊畫廊或 Checkpoint Charlie 一個。"},
-      {cls:"book", txt:"📌 國會大廈玻璃圓頂：免費但要提前線上登記。"},
+      {cls:"book", txt:"📌 國會大廈玻璃圓頂：免費但要提前線上登記（6/8 快滿，越早越好）。"},
+      {cls:"", txt:"🛍 逛街：主逛 Mall of Berlin（~200 店、有 food court 當午餐，週一 10–20 開）；想再逛，傍晚晚餐地 Alexanderplatz 還有 Alexa 商場 + Galeria 百貨(~16:00–18:30)。德國週一商店都開、只有週日關。"},
+      {cls:"", txt:"ℹ️ 原本的 Gendarmenmarkt 拿掉了（想看的話在 Checkpoint 北邊 ~8min，順路可加）。"},
     ]},
 
   { id:"d9", date:"6/9 (二) 柏林→漢堡", color:"#f2994a", subtitle:"火車 12:30→15:12（已訂）· 漢堡第一晚自由",
